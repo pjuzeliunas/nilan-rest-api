@@ -14,9 +14,14 @@ func readings(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(controller.FetchReadings())
 }
 
+func settings(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(controller.FetchSettings())
+}
+
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/readings", readings)
+	router.HandleFunc("/settings", settings)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
