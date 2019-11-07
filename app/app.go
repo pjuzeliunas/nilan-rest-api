@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
-
 	"../controller"
 )
 
 func main() {
-	controller.FetchReadings()
-	fmt.Println("Readings: ", controller.FetchReadings())
-	fmt.Println("Settings: ", controller.FetchSettings())
+	var settings = controller.FetchSettings()
+	settings.FanSpeed = controller.FanSpeedLow
+	controller.SendSettings(settings)
 }
