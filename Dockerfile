@@ -17,7 +17,7 @@ RUN go get -d -v ./...
 RUN go build -o nilanapp app/app.go
 
 # Expose port 8080 to the outside world
-# EXPOSE 8080
+EXPOSE 8080
 
 # Command to run the executable
 CMD ["./nilanapp"]
