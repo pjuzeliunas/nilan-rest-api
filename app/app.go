@@ -27,7 +27,7 @@ func settings(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateSettings(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Processing settings update (PUT) request from %v\n", r.RemoteAddr)
+	log.Printf("Processing settings update request from %v\n", r.RemoteAddr)
 	var newSettings controller.Settings
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {

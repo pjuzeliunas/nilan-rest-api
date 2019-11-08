@@ -86,19 +86,20 @@ const (
 
 // FetchSettings of Nilan
 func FetchSettings() Settings {
-	log.Println("Fetching Nilan settings")
 	registers := []Register{FanSpeedRegister, DesiredRoomTemperatureRegister}
 	registerValues := fetchRegisterValues(1, registers)
 
 	fanSpeed := FanSpeed(registerValues[FanSpeedRegister])
 	desiredRoomTemperature := int(registerValues[DesiredRoomTemperatureRegister])
 
-	return Settings{FanSpeed: fanSpeed, DesiredRoomTemperature: desiredRoomTemperature}
+	settings := Settings{FanSpeed: fanSpeed, DesiredRoomTemperature: desiredRoomTemperature}
+	log.Printf("Settings: %+v\n", settings)
+	return settings
 }
 
 // SendSettings of Nilan
 func SendSettings(settings Settings) {
-	log.Printf("Sending new settings to Nilan: %+v\n", settings)
+	log.Printf("New settings: %+v\n", settings)
 	registerValues := make(map[Register]uint16)
 
 	fanSpeed := uint16(settings.FanSpeed)
@@ -112,7 +113,6 @@ func SendSettings(settings Settings) {
 
 // FetchReadings of Nilan sensors
 func FetchReadings() Readings {
-	log.Println("Fetching Nilan readings")
 	var roomTemperatureRegister Register
 	// Room temperature is taken from one of two sensors depending on the flag value
 	masterTemperatureSensorSetting := fetchValue(MasterTemperatureSensorSettingRegister)
@@ -123,10 +123,12 @@ func FetchReadings() Readings {
 	}
 
 	registers := []Register{roomTemperatureRegister, OutdoorTemperatureRegister}
-	readings := fetchRegisterValues(1, registers)
+	readingsRaw := fetchRegisterValues(1, registers)
 
-	roomTemperature := int(readings[roomTemperatureRegister])
-	outdoorTemperature := int(readings[OutdoorTemperatureRegister])
+	roomTemperature := int(readingsRaw[roomTemperatureRegister])
+	outdoorTemperature := int(readingsRaw[OutdoorTemperatureRegister])
 
-	return Readings{RoomTemperature: roomTemperature, OutdoorTemperature: outdoorTemperature}
+	readings := Readings{RoomTemperature: roomTemperature, OutdoorTemperature: outdoorTemperature}
+	log.Printf("Readings: %+v\n", readings)
+	return readings
 }
