@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/binary"
+	"log"
 	"time"
 
 	"github.com/goburrow/modbus"
@@ -85,6 +86,7 @@ const (
 
 // FetchSettings of Nilan
 func FetchSettings() Settings {
+	log.Println("Fetching Nilan settings")
 	registers := []Register{FanSpeedRegister, DesiredRoomTemperatureRegister}
 	registerValues := fetchRegisterValues(1, registers)
 
@@ -96,6 +98,7 @@ func FetchSettings() Settings {
 
 // SendSettings of Nilan
 func SendSettings(settings Settings) {
+	log.Printf("Sending new settings to Nilan: %+v\n", settings)
 	registerValues := make(map[Register]uint16)
 
 	fanSpeed := uint16(settings.FanSpeed)
@@ -109,6 +112,7 @@ func SendSettings(settings Settings) {
 
 // FetchReadings of Nilan sensors
 func FetchReadings() Readings {
+	log.Println("Fetching Nilan readings")
 	var roomTemperatureRegister Register
 	// Room temperature is taken from one of two sensors depending on the flag value
 	masterTemperatureSensorSetting := fetchValue(MasterTemperatureSensorSettingRegister)
