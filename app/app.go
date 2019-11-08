@@ -13,11 +13,15 @@ import (
 )
 
 func readings(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(controller.FetchReadings())
+	readings := controller.FetchReadings()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(readings)
 }
 
 func settings(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(controller.FetchSettings())
+	settings := controller.FetchSettings()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(settings)
 }
 
 func updateSettings(w http.ResponseWriter, r *http.Request) {
