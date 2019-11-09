@@ -30,12 +30,14 @@ func updateSettings(w http.ResponseWriter, r *http.Request) {
 	var newSettings controller.Settings
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Printf("Bad request: %v\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = json.Unmarshal(reqBody, &newSettings)
 	if err != nil {
+		log.Printf("Bad request: %v\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
