@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "LaunchMac",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}/../app/app.go",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "LaunchWindows",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}\\..\\app\\app.go",
             "env": {},
             "args": []
         }
