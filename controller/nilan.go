@@ -28,4 +28,8 @@ type Readings struct {
 	RoomTemperature int
 	// OutdoorTemperature in C times 10
 	OutdoorTemperature int
+	// AverageHumidity (0-100%)
+	AverageHumidity int
+	// ActualHumidity of air (0-100%)
+	ActualHumidity int
 }

@@ -67,22 +67,26 @@ func setRegisterValues(slaveID byte, values map[Register]uint16) {
 type Register uint16
 
 const (
-	// FanSpeedRegister is a register with desired FanSpeed value
+	// FanSpeedRegister is ID of register holding desired FanSpeed value
 	FanSpeedRegister Register = 20148
-	// DesiredRoomTemperatureRegister is a register with desired room temperature in C times 10.
+	// DesiredRoomTemperatureRegister is ID of register holding desired room temperature in C times 10.
 	// Example: 23.5 C is stored as 235.
 	DesiredRoomTemperatureRegister Register = 20260
-	// MasterTemperatureSensorSettingRegister holds either 0 (read temperature from T3) or 1
-	// (read temperature from Text)
+	// MasterTemperatureSensorSettingRegister is ID of register holding either 0 (read temperature from T3)
+	// or 1 (read temperature from Text)
 	MasterTemperatureSensorSettingRegister Register = 20263
-	// T3ExtractAirTemperatureRegister holds room temperature value when
+	// T3ExtractAirTemperatureRegister is ID of register holding room temperature value when
 	// MasterTemperatureSensorSettingRegister is 0
 	T3ExtractAirTemperatureRegister Register = 20286
-	// TextRoomTemperatureRegister holds room temperature value when
+	// TextRoomTemperatureRegister is ID of register holding room temperature value when
 	// MasterTemperatureSensorSettingRegister is 1
 	TextRoomTemperatureRegister Register = 20280
-	// OutdoorTemperatureRegister holds outdoor temperature
+	// OutdoorTemperatureRegister is ID of register outdoor temperature
 	OutdoorTemperatureRegister Register = 20282
+	// AverageHumidityRegister is ID of register holding average humidity value
+	AverageHumidityRegister Register = 20164
+	// ActualHumidityRegister is ID of register holding actual humidity value
+	ActualHumidityRegister Register = 21776
 )
 
 // FetchSettings of Nilan
@@ -133,13 +137,22 @@ func FetchReadings() Readings {
 		roomTemperatureRegister = TextRoomTemperatureRegister
 	}
 
-	registers := []Register{roomTemperatureRegister, OutdoorTemperatureRegister}
+	registers := []Register{roomTemperatureRegister,
+		OutdoorTemperatureRegister,
+		AverageHumidityRegister,
+		ActualHumidityRegister}
 	readingsRaw := fetchRegisterValues(1, registers)
 
 	roomTemperature := int(readingsRaw[roomTemperatureRegister])
 	outdoorTemperature := int(readingsRaw[OutdoorTemperatureRegister])
+	averageHumidity := int(readingsRaw[AverageHumidityRegister])
+	actualHumidity := int(readingsRaw[ActualHumidityRegister])
 
-	readings := Readings{RoomTemperature: roomTemperature, OutdoorTemperature: outdoorTemperature}
+	readings := Readings{
+		RoomTemperature:    roomTemperature,
+		OutdoorTemperature: outdoorTemperature,
+		AverageHumidity:    averageHumidity,
+		ActualHumidity:     actualHumidity}
 	log.Printf("Readings: %+v\n", readings)
 	return readings
 }
