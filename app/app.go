@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,16 +30,18 @@ func updateSettings(w http.ResponseWriter, r *http.Request) {
 	var newSettings controller.Settings
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Please verify data")
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.Unmarshal(reqBody, &newSettings)
+	err = json.Unmarshal(reqBody, &newSettings)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	controller.SendSettings(newSettings)
-
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newSettings)
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {

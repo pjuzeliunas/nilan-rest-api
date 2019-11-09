@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/goburrow/modbus"
 )
 
@@ -102,7 +103,8 @@ func FetchSettings() Settings {
 
 // SendSettings of Nilan
 func SendSettings(settings Settings) {
-	log.Printf("New settings: %+v\n", settings)
+	settingsStr := spew.Sprintf("%+v", settings)
+	log.Printf("Sending new settings to Nialn (<nil> values will be ignored): %+v\n", settingsStr)
 	registerValues := make(map[Register]uint16)
 
 	if settings.FanSpeed != nil {
