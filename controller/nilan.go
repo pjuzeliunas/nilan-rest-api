@@ -33,7 +33,7 @@ type Readings struct {
 	// ActualHumidity of air (0-100%)
 	ActualHumidity int
 	// WaterAfterHeaterTemperature in C times 10
-	WaterAfterHeaterTemperature int
+	//WaterAfterHeaterTemperature int
 	// DHWTankTopTempeature in C times 10
 	DHWTankTopTemperature int
 	// DHWTankBottomTemperature in C times 10

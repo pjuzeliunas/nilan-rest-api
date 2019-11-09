@@ -88,11 +88,11 @@ const (
 	// ActualHumidityRegister is ID of register holding actual humidity value
 	ActualHumidityRegister Register = 21776
 	// WaterAfterHeaterTemperatureRegister is ID of register holding T9 water after heater temperature
-	WaterAfterHeaterTemperatureRegister Register = 20298
-	// DHWTopTankTemperatureRegister is ID of register holding T21 top DHW tank temperature
-	DHWTopTankTemperatureRegister Register = 20580
-	// DHWBottomTankTemperatureRegister is ID of register holding T21 bottom DHW tank temperature
-	DHWBottomTankTemperatureRegister Register = 20582
+	// WaterAfterHeaterTemperatureRegister Register = 20298
+	// DHWTopTankTemperatureRegister is ID of register holding T11 top DHW tank temperature
+	DHWTopTankTemperatureRegister Register = 20520
+	// DHWBottomTankTemperatureRegister is ID of register holding T11 bottom DHW tank temperature
+	DHWBottomTankTemperatureRegister Register = 20522
 )
 
 // FetchSettings of Nilan
@@ -147,7 +147,7 @@ func FetchReadings() Readings {
 		OutdoorTemperatureRegister,
 		AverageHumidityRegister,
 		ActualHumidityRegister,
-		WaterAfterHeaterTemperatureRegister,
+		//WaterAfterHeaterTemperatureRegister,
 		DHWTopTankTemperatureRegister,
 		DHWBottomTankTemperatureRegister}
 	readingsRaw := fetchRegisterValues(1, registers)
@@ -156,7 +156,7 @@ func FetchReadings() Readings {
 	outdoorTemperature := int(readingsRaw[OutdoorTemperatureRegister])
 	averageHumidity := int(readingsRaw[AverageHumidityRegister])
 	actualHumidity := int(readingsRaw[ActualHumidityRegister])
-	waterAfterHeaterTemperature := int(readingsRaw[WaterAfterHeaterTemperatureRegister])
+	//waterAfterHeaterTemperature := int(readingsRaw[WaterAfterHeaterTemperatureRegister])
 	dhwTopTemperature := int(readingsRaw[DHWTopTankTemperatureRegister])
 	dhwBottomTemperature := int(readingsRaw[DHWBottomTankTemperatureRegister])
 
@@ -165,7 +165,7 @@ func FetchReadings() Readings {
 		OutdoorTemperature:          outdoorTemperature,
 		AverageHumidity:             averageHumidity,
 		ActualHumidity:              actualHumidity,
-		WaterAfterHeaterTemperature: waterAfterHeaterTemperature,
+		//WaterAfterHeaterTemperature: waterAfterHeaterTemperature,
 		DHWTankTopTemperature:       dhwTopTemperature,
 		DHWTankBottomTemperature:    dhwBottomTemperature}
 	log.Printf("Readings: %+v\n", readings)
