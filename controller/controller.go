@@ -87,6 +87,12 @@ const (
 	AverageHumidityRegister Register = 20164
 	// ActualHumidityRegister is ID of register holding actual humidity value
 	ActualHumidityRegister Register = 21776
+	// WaterAfterHeaterTemperatureRegister is ID of register holding T9 water after heater temperature
+	WaterAfterHeaterTemperatureRegister Register = 20298
+	// DHWTopTankTemperatureRegister is ID of register holding T21 top DHW tank temperature
+	DHWTopTankTemperatureRegister Register = 20580
+	// DHWBottomTankTemperatureRegister is ID of register holding T21 bottom DHW tank temperature
+	DHWBottomTankTemperatureRegister Register = 20582
 )
 
 // FetchSettings of Nilan
@@ -140,19 +146,28 @@ func FetchReadings() Readings {
 	registers := []Register{roomTemperatureRegister,
 		OutdoorTemperatureRegister,
 		AverageHumidityRegister,
-		ActualHumidityRegister}
+		ActualHumidityRegister,
+		WaterAfterHeaterTemperatureRegister,
+		DHWTopTankTemperatureRegister,
+		DHWBottomTankTemperatureRegister}
 	readingsRaw := fetchRegisterValues(1, registers)
 
 	roomTemperature := int(readingsRaw[roomTemperatureRegister])
 	outdoorTemperature := int(readingsRaw[OutdoorTemperatureRegister])
 	averageHumidity := int(readingsRaw[AverageHumidityRegister])
 	actualHumidity := int(readingsRaw[ActualHumidityRegister])
+	waterAfterHeaterTemperature := int(readingsRaw[WaterAfterHeaterTemperatureRegister])
+	dhwTopTemperature := int(readingsRaw[DHWTopTankTemperatureRegister])
+	dhwBottomTemperature := int(readingsRaw[DHWBottomTankTemperatureRegister])
 
 	readings := Readings{
-		RoomTemperature:    roomTemperature,
-		OutdoorTemperature: outdoorTemperature,
-		AverageHumidity:    averageHumidity,
-		ActualHumidity:     actualHumidity}
+		RoomTemperature:             roomTemperature,
+		OutdoorTemperature:          outdoorTemperature,
+		AverageHumidity:             averageHumidity,
+		ActualHumidity:              actualHumidity,
+		WaterAfterHeaterTemperature: waterAfterHeaterTemperature,
+		DHWTankTopTemperature:       dhwTopTemperature,
+		DHWTankBottomTemperature:    dhwBottomTemperature}
 	log.Printf("Readings: %+v\n", readings)
 	return readings
 }
