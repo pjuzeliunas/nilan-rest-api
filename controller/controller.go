@@ -89,8 +89,11 @@ func FetchSettings() Settings {
 	registers := []Register{FanSpeedRegister, DesiredRoomTemperatureRegister}
 	registerValues := fetchRegisterValues(1, registers)
 
-	fanSpeed := FanSpeed(registerValues[FanSpeedRegister])
-	desiredRoomTemperature := int(registerValues[DesiredRoomTemperatureRegister])
+	fanSpeed := new(FanSpeed)
+	*fanSpeed = FanSpeed(registerValues[FanSpeedRegister])
+
+	desiredRoomTemperature := new(int)
+	*desiredRoomTemperature = int(registerValues[DesiredRoomTemperatureRegister])
 
 	settings := Settings{FanSpeed: fanSpeed, DesiredRoomTemperature: desiredRoomTemperature}
 	log.Printf("Settings: %+v\n", settings)
@@ -102,11 +105,17 @@ func SendSettings(settings Settings) {
 	log.Printf("New settings: %+v\n", settings)
 	registerValues := make(map[Register]uint16)
 
-	fanSpeed := uint16(settings.FanSpeed)
-	desiredRoomTemperature := uint16(settings.DesiredRoomTemperature)
+	if settings.FanSpeed != nil {
+		fanSpeed := new(uint16)
+		*fanSpeed = uint16(*settings.FanSpeed)
+		registerValues[FanSpeedRegister] = *fanSpeed
+	}
 
-	registerValues[FanSpeedRegister] = fanSpeed
-	registerValues[DesiredRoomTemperatureRegister] = desiredRoomTemperature
+	if settings.DesiredRoomTemperature != nil {
+		desiredRoomTemperature := new(uint16)
+		*desiredRoomTemperature = uint16(*settings.DesiredRoomTemperature)
+		registerValues[DesiredRoomTemperatureRegister] = *desiredRoomTemperature
+	}
 
 	setRegisterValues(1, registerValues)
 }

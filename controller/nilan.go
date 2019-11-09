@@ -17,9 +17,9 @@ const (
 // Settings of Nilan system
 type Settings struct {
 	// FanSpeed of ventilation
-	FanSpeed FanSpeed
+	FanSpeed *FanSpeed
 	// DesiredRoomTemperature in C (5-40) times 10
-	DesiredRoomTemperature int
+	DesiredRoomTemperature *int
 }
 
 // Readings from Nilan sensors
