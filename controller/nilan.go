@@ -20,6 +20,8 @@ type Settings struct {
 	FanSpeed *FanSpeed
 	// DesiredRoomTemperature in C (5-40) times 10
 	DesiredRoomTemperature *int
+	// DesiredDHWTemperature in C (10-60) times 10
+	DesiredDHWTemperature *int
 }
 
 // Readings from Nilan sensors
@@ -32,8 +34,6 @@ type Readings struct {
 	AverageHumidity int
 	// ActualHumidity of air (0-100%)
 	ActualHumidity int
-	// WaterAfterHeaterTemperature in C times 10
-	//WaterAfterHeaterTemperature int
 	// DHWTankTopTempeature in C times 10
 	DHWTankTopTemperature int
 	// DHWTankBottomTemperature in C times 10

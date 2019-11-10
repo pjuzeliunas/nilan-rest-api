@@ -12,3 +12,4 @@
 *.out
 
 nilanapp
+.DS_Store
