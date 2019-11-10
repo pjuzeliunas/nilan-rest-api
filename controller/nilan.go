@@ -22,6 +22,18 @@ type Settings struct {
 	DesiredRoomTemperature *int
 	// DesiredDHWTemperature in C (10-60) times 10
 	DesiredDHWTemperature *int
+	// DHWProductionPaused tells if DHW is switched temporaty off
+	DHWProductionPaused *bool
+	// DHWProductionPauseDuration is duration of DHW pause (1-180)
+	DHWProductionPauseDuration *int
+	// CentralHeatingPaused tells if central heating is switched temporary off
+	CentralHeatingPaused *bool
+	// CentralHeatingPauseDuration is duration of central heating pause (1-180)
+	CentralHeatingPauseDuration *int
+	// VentilationMode is either 0 (Auto), 1 (Cooling) or 2 (Heating)
+	VentilationMode *int
+	// VentilationOnPause is used for stopping ventilation (emergency)
+	VentilationOnPause *bool
 }
 
 // Readings from Nilan sensors

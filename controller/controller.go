@@ -30,9 +30,8 @@ func fetchValue(register Register) uint16 {
 	resultBytes, _ := client.ReadHoldingRegisters(uint16(register), 1)
 	if len(resultBytes) == 2 {
 		return binary.BigEndian.Uint16(resultBytes)
-	} else {
-		panic("Cannot read register value")
 	}
+	panic("Cannot read register value")
 }
 
 func fetchRegisterValues(slaveID byte, registers []Register) map[Register]uint16 {
@@ -93,25 +92,73 @@ const (
 	DHWBottomTankTemperatureRegister Register = 20522
 	// DHWSetPointRegister is ID of register holding desired DHW temperature
 	DHWSetPointRegister Register = 20460
+	// DHWPauseRegister is ID of register holding DHW pause flag
+	DHWPauseRegister Register = 20440
+	// DHWPauseDurationRegister is ID of register holding DHW pause duration value
+	DHWPauseDurationRegister Register = 20441
+	// CentralHeatingPauseRegister is ID of register holding central heating pause flag
+	CentralHeatingPauseRegister Register = 20600
+	// CentralHeatingPauseDurationRegister is ID of register holding central heating pause duration value
+	CentralHeatingPauseDurationRegister Register = 20601
+	// VentilationModelRegister is ID of register holding ventilation mode value (0, 1 or 2).
+	VentilationModelRegister Register = 20120
+	// VentilationPauseRegister is ID of register holding ventilation pause flag
+	VentilationPauseRegister Register = 20100
 )
 
 // FetchSettings of Nilan
 func FetchSettings() Settings {
-	registers := []Register{FanSpeedRegister, DesiredRoomTemperatureRegister, DHWSetPointRegister}
-	registerValues := fetchRegisterValues(1, registers)
+	client1Registers := []Register{
+		FanSpeedRegister,
+		DesiredRoomTemperatureRegister,
+		DHWSetPointRegister,
+		DHWPauseRegister,
+		DHWPauseDurationRegister,
+		VentilationModelRegister,
+		VentilationPauseRegister}
+	client4Registers := []Register{
+		CentralHeatingPauseRegister,
+		CentralHeatingPauseDurationRegister}
+
+	client1RegisterValues := fetchRegisterValues(1, client1Registers)
+	client4RegisterValues := fetchRegisterValues(4, client4Registers)
 
 	fanSpeed := new(FanSpeed)
-	*fanSpeed = FanSpeed(registerValues[FanSpeedRegister])
+	*fanSpeed = FanSpeed(client1RegisterValues[FanSpeedRegister])
 
 	desiredRoomTemperature := new(int)
-	*desiredRoomTemperature = int(registerValues[DesiredRoomTemperatureRegister])
+	*desiredRoomTemperature = int(client1RegisterValues[DesiredRoomTemperatureRegister])
 
 	desiredDHWTemperature := new(int)
-	*desiredDHWTemperature = int(registerValues[DHWSetPointRegister])
+	*desiredDHWTemperature = int(client1RegisterValues[DHWSetPointRegister])
+
+	dhwPaused := new(bool)
+	*dhwPaused = client1RegisterValues[DHWPauseRegister] == 1
+
+	dhwPauseDuration := new(int)
+	*dhwPauseDuration = int(client1RegisterValues[DHWPauseDurationRegister])
+
+	centralHeatingPaused := new(bool)
+	*centralHeatingPaused = client4RegisterValues[CentralHeatingPauseRegister] == 1
+
+	centralHeatingPauseDuration := new(int)
+	*centralHeatingPauseDuration = int(client4RegisterValues[CentralHeatingPauseDurationRegister])
+
+	ventilationMode := new(int)
+	*ventilationMode = int(client1RegisterValues[VentilationModelRegister])
+
+	ventilationPause := new(bool)
+	*ventilationPause = client1RegisterValues[VentilationPauseRegister] == 1
 
 	settings := Settings{FanSpeed: fanSpeed,
-		DesiredRoomTemperature: desiredRoomTemperature,
-		DesiredDHWTemperature:  desiredDHWTemperature}
+		DesiredRoomTemperature:      desiredRoomTemperature,
+		DesiredDHWTemperature:       desiredDHWTemperature,
+		DHWProductionPaused:         dhwPaused,
+		DHWProductionPauseDuration:  dhwPauseDuration,
+		CentralHeatingPaused:        centralHeatingPaused,
+		CentralHeatingPauseDuration: centralHeatingPauseDuration,
+		VentilationMode:             ventilationMode,
+		VentilationOnPause:          ventilationPause}
 
 	log.Printf("Settings: %+v\n", settings)
 	return settings
@@ -121,24 +168,70 @@ func FetchSettings() Settings {
 func SendSettings(settings Settings) {
 	settingsStr := spew.Sprintf("%+v", settings)
 	log.Printf("Sending new settings to Nialn (<nil> values will be ignored): %+v\n", settingsStr)
-	registerValues := make(map[Register]uint16)
+	client1RegisterValues := make(map[Register]uint16)
+	client4RegisterValues := make(map[Register]uint16)
 
 	if settings.FanSpeed != nil {
 		fanSpeed := uint16(*settings.FanSpeed)
-		registerValues[FanSpeedRegister] = fanSpeed
+		client1RegisterValues[FanSpeedRegister] = fanSpeed
 	}
 
 	if settings.DesiredRoomTemperature != nil {
 		desiredRoomTemperature := uint16(*settings.DesiredRoomTemperature)
-		registerValues[DesiredRoomTemperatureRegister] = desiredRoomTemperature
+		client1RegisterValues[DesiredRoomTemperatureRegister] = desiredRoomTemperature
 	}
 
 	if settings.DesiredDHWTemperature != nil {
 		desiredDHWTemperature := uint16(*settings.DesiredDHWTemperature)
-		registerValues[DHWSetPointRegister] = desiredDHWTemperature
+		client1RegisterValues[DHWSetPointRegister] = desiredDHWTemperature
 	}
 
-	setRegisterValues(1, registerValues)
+	if settings.DHWProductionPaused != nil {
+		if *settings.DHWProductionPaused {
+			client1RegisterValues[DHWPauseRegister] = uint16(1)
+		} else {
+			client1RegisterValues[DHWPauseRegister] = uint16(0)
+		}
+	}
+
+	if settings.DHWProductionPauseDuration != nil {
+		pauseDuration := uint16(*settings.DHWProductionPauseDuration)
+		client1RegisterValues[DHWPauseDurationRegister] = pauseDuration
+	}
+
+	if settings.CentralHeatingPaused != nil {
+		if *settings.CentralHeatingPaused {
+			client4RegisterValues[CentralHeatingPauseRegister] = uint16(1)
+		} else {
+			client4RegisterValues[CentralHeatingPauseRegister] = uint16(0)
+		}
+	}
+
+	if settings.CentralHeatingPauseDuration != nil {
+		pauseDuration := uint16(*settings.CentralHeatingPauseDuration)
+		client4RegisterValues[CentralHeatingPauseDurationRegister] = pauseDuration
+	}
+
+	if settings.VentilationMode != nil {
+		ventilationMode := *settings.VentilationMode
+		if ventilationMode != 0 && ventilationMode != 1 && ventilationMode != 2 {
+			panic("Unsupported VentilationMode value")
+			// TODO: Think of validation pattern
+		}
+		ventilationModeVal := uint16(ventilationMode)
+		client4RegisterValues[VentilationModelRegister] = ventilationModeVal
+	}
+
+	if settings.VentilationOnPause != nil {
+		if *settings.VentilationOnPause {
+			client1RegisterValues[VentilationPauseRegister] = uint16(1)
+		} else {
+			client1RegisterValues[VentilationPauseRegister] = uint16(0)
+		}
+	}
+
+	setRegisterValues(1, client1RegisterValues)
+	setRegisterValues(4, client4RegisterValues)
 }
 
 // FetchReadings of Nilan sensors
@@ -156,7 +249,6 @@ func FetchReadings() Readings {
 		OutdoorTemperatureRegister,
 		AverageHumidityRegister,
 		ActualHumidityRegister,
-		//WaterAfterHeaterTemperatureRegister,
 		DHWTopTankTemperatureRegister,
 		DHWBottomTankTemperatureRegister}
 	readingsRaw := fetchRegisterValues(1, registers)
@@ -165,7 +257,6 @@ func FetchReadings() Readings {
 	outdoorTemperature := int(readingsRaw[OutdoorTemperatureRegister])
 	averageHumidity := int(readingsRaw[AverageHumidityRegister])
 	actualHumidity := int(readingsRaw[ActualHumidityRegister])
-	//waterAfterHeaterTemperature := int(readingsRaw[WaterAfterHeaterTemperatureRegister])
 	dhwTopTemperature := int(readingsRaw[DHWTopTankTemperatureRegister])
 	dhwBottomTemperature := int(readingsRaw[DHWBottomTankTemperatureRegister])
 
