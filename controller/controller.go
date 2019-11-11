@@ -53,7 +53,7 @@ func fetchRegisterValues(slaveID byte, registers []Register) map[Register]uint16
 }
 
 func setRegisterValues(slaveID byte, values map[Register]uint16) {
-	handler := getHandler(1)
+	handler := getHandler(slaveID)
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 
