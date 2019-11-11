@@ -23,8 +23,8 @@ func getHandler(slaveID byte) *modbus.TCPClientHandler {
 	return handler
 }
 
-func fetchValue(register Register) uint16 {
-	handler := getHandler(1)
+func fetchValue(slaveID byte, register Register) uint16 {
+	handler := getHandler(slaveID)
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 	resultBytes, _ := client.ReadHoldingRegisters(uint16(register), 1)
@@ -37,7 +37,7 @@ func fetchValue(register Register) uint16 {
 func fetchRegisterValues(slaveID byte, registers []Register) map[Register]uint16 {
 	m := make(map[Register]uint16)
 
-	handler := getHandler(1)
+	handler := getHandler(slaveID)
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 
@@ -104,10 +104,39 @@ const (
 	VentilationModelRegister Register = 20120
 	// VentilationPauseRegister is ID of register holding ventilation pause flag
 	VentilationPauseRegister Register = 20100
+	// SetpointSupplyTemperatureRegisterAIR9 is ID of register holding setpoint supply temperature
+	// on AIR9 models
+	SetpointSupplyTemperatureRegisterAIR9 Register = 20680
+	// SetpointSupplyTemperatureRegisterGEO is ID of register holding setpoint supply temperature
+	// on GEO models
+	SetpointSupplyTemperatureRegisterGEO Register = 20640
+	// DeviceTypeGEOReigister is ID of register that holds number 8 on GEO models
+	DeviceTypeGEOReigister Register = 21839
+	// DeviceTypeAIR9Register is ID of register that holds number 9 on AIR9 models
+	DeviceTypeAIR9Register Register = 21899
+	// T18ReadingRegisterGEO is ID of register holding T18 supply flow temperature reading
+	// on GEO models
+	T18ReadingRegisterGEO Register = 20653
+	// T18ReadingRegisterAIR9 is ID of register holding T18 supply flow temperature reading
+	// on AIR9 models
+	T18ReadingRegisterAIR9 Register = 20686
 )
+
+func supplyFlowSetpointTemperatureRegister() Register {
+	switch {
+	case fetchValue(4, DeviceTypeGEOReigister) == 8:
+		return SetpointSupplyTemperatureRegisterGEO
+	case fetchValue(4, DeviceTypeAIR9Register) == 9:
+		return SetpointSupplyTemperatureRegisterAIR9
+	default:
+		panic("Cannot determine device type")
+	}
+}
 
 // FetchSettings of Nilan
 func FetchSettings() Settings {
+	supplyTemperatureRegister := supplyFlowSetpointTemperatureRegister()
+
 	client1Registers := []Register{
 		FanSpeedRegister,
 		DesiredRoomTemperatureRegister,
@@ -118,7 +147,8 @@ func FetchSettings() Settings {
 		VentilationPauseRegister}
 	client4Registers := []Register{
 		CentralHeatingPauseRegister,
-		CentralHeatingPauseDurationRegister}
+		CentralHeatingPauseDurationRegister,
+		supplyTemperatureRegister}
 
 	client1RegisterValues := fetchRegisterValues(1, client1Registers)
 	client4RegisterValues := fetchRegisterValues(4, client4Registers)
@@ -150,6 +180,9 @@ func FetchSettings() Settings {
 	ventilationPause := new(bool)
 	*ventilationPause = client1RegisterValues[VentilationPauseRegister] == 1
 
+	setpointTemperature := new(int)
+	*setpointTemperature = int(client4RegisterValues[supplyTemperatureRegister])
+
 	settings := Settings{FanSpeed: fanSpeed,
 		DesiredRoomTemperature:      desiredRoomTemperature,
 		DesiredDHWTemperature:       desiredDHWTemperature,
@@ -158,7 +191,8 @@ func FetchSettings() Settings {
 		CentralHeatingPaused:        centralHeatingPaused,
 		CentralHeatingPauseDuration: centralHeatingPauseDuration,
 		VentilationMode:             ventilationMode,
-		VentilationOnPause:          ventilationPause}
+		VentilationOnPause:          ventilationPause,
+		SetpointSupplyTemperature:   setpointTemperature}
 
 	log.Printf("Settings: %+v\n", settings)
 	return settings
@@ -230,35 +264,59 @@ func SendSettings(settings Settings) {
 		}
 	}
 
+	if settings.SetpointSupplyTemperature != nil {
+		setpointTempeature := uint16(*settings.SetpointSupplyTemperature)
+		client4RegisterValues[SetpointSupplyTemperatureRegisterAIR9] = setpointTempeature
+		client4RegisterValues[SetpointSupplyTemperatureRegisterGEO] = setpointTempeature
+	}
+
 	setRegisterValues(1, client1RegisterValues)
 	setRegisterValues(4, client4RegisterValues)
 }
 
+func roomTemperatureRegister() Register {
+	if fetchValue(1, MasterTemperatureSensorSettingRegister) == 0 {
+		return T3ExtractAirTemperatureRegister
+	} else {
+		return TextRoomTemperatureRegister
+	}
+}
+
+func t18ReadingRegister() Register {
+	switch {
+	case fetchValue(4, DeviceTypeGEOReigister) == 8:
+		return T18ReadingRegisterGEO
+	case fetchValue(4, DeviceTypeAIR9Register) == 9:
+		return T18ReadingRegisterAIR9
+	default:
+		panic("Cannot determine device type")
+	}
+}
+
 // FetchReadings of Nilan sensors
 func FetchReadings() Readings {
-	var roomTemperatureRegister Register
-	// Room temperature is taken from one of two sensors depending on the flag value
-	masterTemperatureSensorSetting := fetchValue(MasterTemperatureSensorSettingRegister)
-	if masterTemperatureSensorSetting == 0 {
-		roomTemperatureRegister = T3ExtractAirTemperatureRegister
-	} else {
-		roomTemperatureRegister = TextRoomTemperatureRegister
-	}
+	roomTemperatureRegister := roomTemperatureRegister()
+	t18Register := t18ReadingRegister()
 
-	registers := []Register{roomTemperatureRegister,
+	client1Registers := []Register{roomTemperatureRegister,
 		OutdoorTemperatureRegister,
 		AverageHumidityRegister,
 		ActualHumidityRegister,
 		DHWTopTankTemperatureRegister,
 		DHWBottomTankTemperatureRegister}
-	readingsRaw := fetchRegisterValues(1, registers)
 
-	roomTemperature := int(readingsRaw[roomTemperatureRegister])
-	outdoorTemperature := int(readingsRaw[OutdoorTemperatureRegister])
-	averageHumidity := int(readingsRaw[AverageHumidityRegister])
-	actualHumidity := int(readingsRaw[ActualHumidityRegister])
-	dhwTopTemperature := int(readingsRaw[DHWTopTankTemperatureRegister])
-	dhwBottomTemperature := int(readingsRaw[DHWBottomTankTemperatureRegister])
+	client4Registers := []Register{t18Register}
+
+	client1ReadingsRaw := fetchRegisterValues(1, client1Registers)
+	client4ReadingsRaw := fetchRegisterValues(4, client4Registers)
+
+	roomTemperature := int(client1ReadingsRaw[roomTemperatureRegister])
+	outdoorTemperature := int(client1ReadingsRaw[OutdoorTemperatureRegister])
+	averageHumidity := int(client1ReadingsRaw[AverageHumidityRegister])
+	actualHumidity := int(client1ReadingsRaw[ActualHumidityRegister])
+	dhwTopTemperature := int(client1ReadingsRaw[DHWTopTankTemperatureRegister])
+	dhwBottomTemperature := int(client1ReadingsRaw[DHWBottomTankTemperatureRegister])
+	supplyFlowTemperature := int(client4ReadingsRaw[t18Register])
 
 	readings := Readings{
 		RoomTemperature:          roomTemperature,
@@ -266,7 +324,8 @@ func FetchReadings() Readings {
 		AverageHumidity:          averageHumidity,
 		ActualHumidity:           actualHumidity,
 		DHWTankTopTemperature:    dhwTopTemperature,
-		DHWTankBottomTemperature: dhwBottomTemperature}
+		DHWTankBottomTemperature: dhwBottomTemperature,
+		SupplyFlowTemperature:    supplyFlowTemperature}
 	log.Printf("Readings: %+v\n", readings)
 	return readings
 }

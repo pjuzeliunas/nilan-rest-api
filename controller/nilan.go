@@ -34,6 +34,8 @@ type Settings struct {
 	VentilationMode *int
 	// VentilationOnPause is used for stopping ventilation (emergency)
 	VentilationOnPause *bool
+	// SetpointSupplyTemperature in C (5-50)
+	SetpointSupplyTemperature *int
 }
 
 // Readings from Nilan sensors
@@ -50,4 +52,6 @@ type Readings struct {
 	DHWTankTopTemperature int
 	// DHWTankBottomTemperature in C times 10
 	DHWTankBottomTemperature int
+	// SupplyFlowTemperature in C times 10
+	SupplyFlowTemperature int
 }
