@@ -99,3 +99,10 @@ go get -d -v ./...
 go build -o nilanapp app/app.go
 ./nilanapp
 ```
+
+## Disclaimer
+
+This initial version of API server is developed by home automation enthusiast (outside Nilan company) and is based
+on open Nilan CTS700 Modbus protocol.
+
+Nilan is a registered trademark and belongs to [Nilan A/S](https://www.nilan.dk/Default.aspx).
