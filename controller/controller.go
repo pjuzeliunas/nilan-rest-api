@@ -100,8 +100,8 @@ const (
 	CentralHeatingPauseRegister Register = 20600
 	// CentralHeatingPauseDurationRegister is ID of register holding central heating pause duration value
 	CentralHeatingPauseDurationRegister Register = 20601
-	// VentilationModelRegister is ID of register holding ventilation mode value (0, 1 or 2).
-	VentilationModelRegister Register = 20120
+	// VentilationModeRegister is ID of register holding ventilation mode value (0, 1 or 2).
+	VentilationModeRegister Register = 20120
 	// VentilationPauseRegister is ID of register holding ventilation pause flag
 	VentilationPauseRegister Register = 20100
 	// SetpointSupplyTemperatureRegisterAIR9 is ID of register holding setpoint supply temperature
@@ -143,7 +143,7 @@ func FetchSettings() Settings {
 		DHWSetPointRegister,
 		DHWPauseRegister,
 		DHWPauseDurationRegister,
-		VentilationModelRegister,
+		VentilationModeRegister,
 		VentilationPauseRegister}
 	client4Registers := []Register{
 		CentralHeatingPauseRegister,
@@ -175,7 +175,7 @@ func FetchSettings() Settings {
 	*centralHeatingPauseDuration = int(client4RegisterValues[CentralHeatingPauseDurationRegister])
 
 	ventilationMode := new(int)
-	*ventilationMode = int(client1RegisterValues[VentilationModelRegister])
+	*ventilationMode = int(client1RegisterValues[VentilationModeRegister])
 
 	ventilationPause := new(bool)
 	*ventilationPause = client1RegisterValues[VentilationPauseRegister] == 1
@@ -194,7 +194,8 @@ func FetchSettings() Settings {
 		VentilationOnPause:          ventilationPause,
 		SetpointSupplyTemperature:   setpointTemperature}
 
-	log.Printf("Settings: %+v\n", settings)
+	settingsStr := spew.Sprintf("%+v", settings)
+	log.Printf("Settings: %+v\n", settingsStr)
 	return settings
 }
 
@@ -253,7 +254,7 @@ func SendSettings(settings Settings) {
 			// TODO: Think of validation pattern
 		}
 		ventilationModeVal := uint16(ventilationMode)
-		client4RegisterValues[VentilationModelRegister] = ventilationModeVal
+		client1RegisterValues[VentilationModeRegister] = ventilationModeVal
 	}
 
 	if settings.VentilationOnPause != nil {
