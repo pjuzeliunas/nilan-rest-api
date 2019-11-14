@@ -6,6 +6,65 @@ It exposes heatpump settings and readings in JSON format.
 
 Server is written in Go.
 
+
+## Usage
+
+REST API server is running on port 8080 and supports the following HTTP methods:
+
+#### GET `/readings`
+
+Returns basic readings of Nilan heatpump in JSON format.
+
+```
+{
+    "RoomTemperature": 242,
+    "OutdoorTemperature": 83,
+    "AverageHumidity": 38,
+    "ActualHumidity": 37,
+    "DHWTankTopTemperature": 553,
+    "DHWTankBottomTemperature": 511,
+    "SupplyFlowTemperature": 346
+}
+```
+
+Temperature is in ℃ times 10.
+
+#### GET `/settings`
+
+Returns basic settings of Nilan heatpump in JSON format.
+
+```
+{
+    "FanSpeed": 102,
+    "DesiredRoomTemperature": 230,
+    "DesiredDHWTemperature": 530,
+    "DHWProductionPaused": false,
+    "DHWProductionPauseDuration": 3,
+    "CentralHeatingPaused": false,
+    "CentralHeatingPauseDuration": 1,
+    "VentilationMode": 0,
+    "VentilationOnPause": false,
+    "SetpointSupplyTemperature": 350
+}
+```
+
+Fan speed can be 101 (level 1), 102 (level 2), 103 (level 3) or 104 (level 4).
+
+Temperature is in ℃ times 10.
+
+Ventilation mode can be 0 (auto), 1 (cooling) or 2 (heating).
+
+#### PUT `/settings`
+
+Sets settings of Nilan heatpump. Body must be in the same JSON format as one from GET request.
+Nil values or absence of them tells the server to keep the existing setting unchanged,
+thus making it possible to send a single setting change in a short form. For example, to change just
+the fan speed, the following request body is valid:
+```
+{ "FanSpeed": 103 }
+```
+
+
 ## Hardware setup
 
 Tested on
@@ -27,8 +86,10 @@ Make sure that host computer and heatpump are running on the same network (subne
 Build and run Docker container as follows:
 ```
 docker build -t nilan .
-docker run -it --rm nilan
+docker run -it --rm -p 8080:8080 nilan
 ```
+
+For more sophisticated setup refer to Docker documentation.
 
 ### Set up server using Go
 
@@ -39,3 +100,9 @@ go build -o nilanapp app/app.go
 ./nilanapp
 ```
 
+## Disclaimer
+
+This initial version of API server is developed by home automation enthusiast (outside Nilan company) and is based
+on open Nilan CTS700 Modbus protocol.
+
+Nilan is a registered trademark and belongs to [Nilan A/S](https://www.nilan.dk/Default.aspx).
