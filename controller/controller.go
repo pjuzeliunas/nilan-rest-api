@@ -9,9 +9,15 @@ import (
 	"github.com/goburrow/modbus"
 )
 
-func getHandler(slaveID byte) *modbus.TCPClientHandler {
+// Controller is used for communicating with Nilan CTS700 heatpump over
+// Modbus TCP.
+type Controller struct {
+	Config Config
+}
+
+func (c *Controller) getHandler(slaveID byte) *modbus.TCPClientHandler {
 	// Modbus TCP
-	handler := modbus.NewTCPClientHandler("192.168.5.107:502")
+	handler := modbus.NewTCPClientHandler(c.Config.NilanAddress)
 	handler.Timeout = 10 * time.Second
 	handler.SlaveId = slaveID
 	err := handler.Connect()
@@ -23,8 +29,9 @@ func getHandler(slaveID byte) *modbus.TCPClientHandler {
 	return handler
 }
 
-func fetchValue(slaveID byte, register Register) uint16 {
-	handler := getHandler(slaveID)
+// FetchValue from register
+func (c *Controller) FetchValue(slaveID byte, register Register) uint16 {
+	handler := c.getHandler(slaveID)
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 	resultBytes, _ := client.ReadHoldingRegisters(uint16(register), 1)
@@ -34,10 +41,11 @@ func fetchValue(slaveID byte, register Register) uint16 {
 	panic("Cannot read register value")
 }
 
-func fetchRegisterValues(slaveID byte, registers []Register) map[Register]uint16 {
+// FetchRegisterValues from slave
+func (c *Controller) FetchRegisterValues(slaveID byte, registers []Register) map[Register]uint16 {
 	m := make(map[Register]uint16)
 
-	handler := getHandler(slaveID)
+	handler := c.getHandler(slaveID)
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 
@@ -52,8 +60,9 @@ func fetchRegisterValues(slaveID byte, registers []Register) map[Register]uint16
 	return m
 }
 
-func setRegisterValues(slaveID byte, values map[Register]uint16) {
-	handler := getHandler(slaveID)
+// SetRegisterValues on slave
+func (c *Controller) SetRegisterValues(slaveID byte, values map[Register]uint16) {
+	handler := c.getHandler(slaveID)
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 
@@ -122,11 +131,11 @@ const (
 	T18ReadingRegisterAIR9 Register = 20686
 )
 
-func supplyFlowSetpointTemperatureRegister() Register {
+func (c *Controller) supplyFlowSetpointTemperatureRegister() Register {
 	switch {
-	case fetchValue(4, DeviceTypeGEOReigister) == 8:
+	case c.FetchValue(4, DeviceTypeGEOReigister) == 8:
 		return SetpointSupplyTemperatureRegisterGEO
-	case fetchValue(4, DeviceTypeAIR9Register) == 9:
+	case c.FetchValue(4, DeviceTypeAIR9Register) == 9:
 		return SetpointSupplyTemperatureRegisterAIR9
 	default:
 		panic("Cannot determine device type")
@@ -134,8 +143,8 @@ func supplyFlowSetpointTemperatureRegister() Register {
 }
 
 // FetchSettings of Nilan
-func FetchSettings() Settings {
-	supplyTemperatureRegister := supplyFlowSetpointTemperatureRegister()
+func (c *Controller) FetchSettings() Settings {
+	supplyTemperatureRegister := c.supplyFlowSetpointTemperatureRegister()
 
 	client1Registers := []Register{
 		FanSpeedRegister,
@@ -150,8 +159,8 @@ func FetchSettings() Settings {
 		CentralHeatingPauseDurationRegister,
 		supplyTemperatureRegister}
 
-	client1RegisterValues := fetchRegisterValues(1, client1Registers)
-	client4RegisterValues := fetchRegisterValues(4, client4Registers)
+	client1RegisterValues := c.FetchRegisterValues(1, client1Registers)
+	client4RegisterValues := c.FetchRegisterValues(4, client4Registers)
 
 	fanSpeed := new(FanSpeed)
 	*fanSpeed = FanSpeed(client1RegisterValues[FanSpeedRegister])
@@ -200,7 +209,7 @@ func FetchSettings() Settings {
 }
 
 // SendSettings of Nilan
-func SendSettings(settings Settings) {
+func (c *Controller) SendSettings(settings Settings) {
 	settingsStr := spew.Sprintf("%+v", settings)
 	log.Printf("Sending new settings to Nialn (<nil> values will be ignored): %+v\n", settingsStr)
 	client1RegisterValues := make(map[Register]uint16)
@@ -271,23 +280,23 @@ func SendSettings(settings Settings) {
 		client4RegisterValues[SetpointSupplyTemperatureRegisterGEO] = setpointTempeature
 	}
 
-	setRegisterValues(1, client1RegisterValues)
-	setRegisterValues(4, client4RegisterValues)
+	c.SetRegisterValues(1, client1RegisterValues)
+	c.SetRegisterValues(4, client4RegisterValues)
 }
 
-func roomTemperatureRegister() Register {
-	if fetchValue(1, MasterTemperatureSensorSettingRegister) == 0 {
+func (c *Controller) roomTemperatureRegister() Register {
+	if c.FetchValue(1, MasterTemperatureSensorSettingRegister) == 0 {
 		return T3ExtractAirTemperatureRegister
 	} else {
 		return TextRoomTemperatureRegister
 	}
 }
 
-func t18ReadingRegister() Register {
+func (c *Controller) t18ReadingRegister() Register {
 	switch {
-	case fetchValue(4, DeviceTypeGEOReigister) == 8:
+	case c.FetchValue(4, DeviceTypeGEOReigister) == 8:
 		return T18ReadingRegisterGEO
-	case fetchValue(4, DeviceTypeAIR9Register) == 9:
+	case c.FetchValue(4, DeviceTypeAIR9Register) == 9:
 		return T18ReadingRegisterAIR9
 	default:
 		panic("Cannot determine device type")
@@ -295,9 +304,9 @@ func t18ReadingRegister() Register {
 }
 
 // FetchReadings of Nilan sensors
-func FetchReadings() Readings {
-	roomTemperatureRegister := roomTemperatureRegister()
-	t18Register := t18ReadingRegister()
+func (c *Controller) FetchReadings() Readings {
+	roomTemperatureRegister := c.roomTemperatureRegister()
+	t18Register := c.t18ReadingRegister()
 
 	client1Registers := []Register{roomTemperatureRegister,
 		OutdoorTemperatureRegister,
@@ -308,8 +317,8 @@ func FetchReadings() Readings {
 
 	client4Registers := []Register{t18Register}
 
-	client1ReadingsRaw := fetchRegisterValues(1, client1Registers)
-	client4ReadingsRaw := fetchRegisterValues(4, client4Registers)
+	client1ReadingsRaw := c.FetchRegisterValues(1, client1Registers)
+	client4ReadingsRaw := c.FetchRegisterValues(4, client4Registers)
 
 	roomTemperature := int(client1ReadingsRaw[roomTemperatureRegister])
 	outdoorTemperature := int(client1ReadingsRaw[OutdoorTemperatureRegister])
