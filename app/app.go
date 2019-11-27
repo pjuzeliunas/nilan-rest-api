@@ -7,13 +7,12 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
-	"../controller"
+	"github.com/pjuzeliunas/nilan"
 )
 
 func readings(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Processing readings GET request from %v\n", r.RemoteAddr)
-	c := controller.Controller{Config: controller.CurrentConfig()}
+	c := nilan.Controller{Config: nilan.CurrentConfig()}
 	readings := c.FetchReadings()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(readings)
@@ -21,7 +20,7 @@ func readings(w http.ResponseWriter, r *http.Request) {
 
 func settings(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Processing settings GET request from %v\n", r.RemoteAddr)
-	c := controller.Controller{Config: controller.CurrentConfig()}
+	c := nilan.Controller{Config: nilan.CurrentConfig()}
 	settings := c.FetchSettings()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(settings)
@@ -29,8 +28,8 @@ func settings(w http.ResponseWriter, r *http.Request) {
 
 func updateSettings(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Processing settings update request from %v\n", r.RemoteAddr)
-	c := controller.Controller{Config: controller.CurrentConfig()}
-	var newSettings controller.Settings
+	c := nilan.Controller{Config: nilan.CurrentConfig()}
+	var newSettings nilan.Settings
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Bad request: %v\n", err)
@@ -50,7 +49,7 @@ func updateSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	conf := controller.CurrentConfig()
+	conf := nilan.CurrentConfig()
 	log.Printf("Nilan address: %v\n", conf.NilanAddress)
 
 	router := mux.NewRouter().StrictSlash(true)
