@@ -77,7 +77,7 @@ Connect Nilan to the host computer using Ethernet cable. Ethernet cable should h
 
 ### Prerequisites
 
-1. Host computer and Nilan heatpump must be on the same network. By default, heatpump has this IP address: 192.168.5.107.
+1. Host computer and Nilan heatpump must be on the same network. By default, heatpump has this IP address: 192.168.5.107(:502).
 Make sure that host computer and heatpump are running on the same network (subnet) by adjusting ethernet port IP address.
 2. Install either golang or docker.
 
@@ -86,7 +86,7 @@ Make sure that host computer and heatpump are running on the same network (subne
 Build and run Docker container as follows:
 ```
 docker build -t nilan .
-docker run -it --rm -p 8080:8080 nilan
+docker run -e NILAN_ADDRESS=<IP and port of Nilan> -it --rm -p 8080:8080 nilan
 ```
 
 For more sophisticated setup refer to Docker documentation.
@@ -97,7 +97,7 @@ Compile and run server as follows:
 ```
 go get -d -v ./...
 go build -o nilanapp app/app.go
-./nilanapp
+NILAN_ADDRESS=<IP and port of Nilan> ./nilanapp
 ```
 
 ## Disclaimer

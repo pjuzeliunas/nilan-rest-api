@@ -1,0 +1,12 @@
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/goburrow/modbus v0.1.0 h1:DejRZY73nEM6+bt5JSP6IsFolJ9dVcqxsYbpLbeW/ro=
+github.com/goburrow/modbus v0.1.0/go.mod h1:Kx552D5rLIS8E7TyUwQ/UdHEqvX5T8tyiGBTlzMcZBg=
+github.com/goburrow/serial v0.1.0 h1:v2T1SQa/dlUqQiYIT8+Cu7YolfqAi3K96UmhwYyuSrA=
+github.com/goburrow/serial v0.1.0/go.mod h1:sAiqG0nRVswsm1C97xsttiYCzSLBmUZ/VSlVLZJ8haA=
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/pjuzeliunas/nilan v0.0.0-20220213184738-a2e1a502dc18 h1:kibNY2MvHJvr+SV3QgWEQU9bIz7AO3uKHJL5RxhSkS8=
+github.com/pjuzeliunas/nilan v0.0.0-20220213184738-a2e1a502dc18/go.mod h1:jjYWSs1WAcPIk2cdJZ6pMR6OKiaYUcaFMoI84/ptJ9Y=
+github.com/pjuzeliunas/nilan v0.0.0-20220217201618-aa1220fc290e h1:o40M9iFvP2UC2nUJ4ixPtAwI5aPYwQqNhVPzN7XWNTU=
+github.com/pjuzeliunas/nilan v0.0.0-20220217201618-aa1220fc290e/go.mod h1:jjYWSs1WAcPIk2cdJZ6pMR6OKiaYUcaFMoI84/ptJ9Y=
